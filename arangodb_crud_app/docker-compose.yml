@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  arangodb:
+    image: arangodb:3.12
+    container_name: arangodb_crud
+    restart: unless-stopped
+    ports:
+      - "8529:8529"
+    environment:
+      - ARANGO_ROOT_PASSWORD=senha123
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+      - arangodb_apps:/var/lib/arangodb3-apps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8529/_api/version"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  app:
+    build: .
+    container_name: python_app
+    depends_on:
+      arangodb:
+        condition: service_healthy
+    environment:
+      - ARANGO_HOST=http://arangodb:8529
+      - ARANGO_ROOT_PASSWORD=senha123
+    # Mantenha o container rodando se quiser interagir depois,
+    # ou apenas deixe rodar o main.py e sair.
+    # Por padrão ele roda o CMD do Dockerfile (python main.py).
+
+volumes:
+  arangodb_data:
+  arangodb_apps:
